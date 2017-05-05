@@ -1,0 +1,132 @@
+.TH mpibzip2 1
+.SH NAME
+mpibzip2  \-  mpi bzip2 file compressor, v0.6
+.SH SYNOPSIS
+.B mpibzip2 
+.RB [ " \-123456789 " ]
+.RB [ " \-b#cdfktvV " ]
+[
+.I "filenames \&..."
+]
+.SH DESCRIPTION
+.I mpibzip2
+is a parallel implementation of the bzip2 block-sorting file
+compressor that uses MPI and achieves significant speedup on cluster
+machines. The output of this version is fully compatible with bzip2 
+v1.0.2 or newer (ie: anything compressed with 
+.I mpibzip2
+can be decompressed with bzip2).
+.PP
+.I mpibzip2
+should work on any system that has a pthreads compatible C++
+compiler (such as gcc). It has been tested on: Linux and Solaris.
+.PP
+The default settings for
+.I mpibzip2
+will work well in most cases. The only switch you will likely need to
+use is -d to decompress files. Since
+.I mpibzip2
+uses MPI, you will need to launch it using
+.I mpirun
+or some similar
+utility (ie: mpirun -np 4 mpibzip2 myfile.tar).
+.SH OPTIONS
+.TP
+.B \-b#
+Where # is the file block size in 100k (default 9 = 900k)
+.TP
+.B \-c
+Output to standard out (stdout)
+.TP
+.B \-d
+Decompress file
+.TP
+.B \-f
+Force, overwrite existing output file
+.TP
+.B \-k
+Keep input file, do not delete
+.TP
+.B \-t
+Test compressed file integrity
+.TP
+.B \-v
+Verbose mode
+.TP
+.B \-V
+Display version info for 
+.I mpibzip2 
+then exit
+.TP
+.B \-1..9
+Set BWT block size to 100k .. 900k (default 900k)
+.SH FILE SIZES
+You should be able to compress files larger than 4GB with 
+.I mpibzip2.
+.PP
+Files that are compressed with 
+.I mpibzip2 
+are broken up into pieces and
+each individual piece is compressed.  This is how 
+.I mpibzip2 
+runs faster
+on multiple CPUs since the pieces can be compressed simultaneously.
+The final .bz2 file may be slightly larger than if it was compressed
+with the regular bzip2 program due to this file splitting (usually
+less than 0.2% larger).  Files that are compressed with 
+.I mpibzip2 
+will also gain considerable speedup when decompressed using 
+.I mpibzip2.
+.PP
+Files that were compressed using bzip2 will not see speedup since
+bzip2 packages the data into a single chunk that cannot be split
+between processors.  If you have a large file that was created with
+bzip2 (say 1.5GB for example) you will likely not be able to
+decompress the file with 
+.I mpibzip2 
+since 
+.I mpibzip2 
+will try to allocate
+1.5GB of memory to decompress it, and that call might fail depending
+on your system resources.  If the same 1.5GB file had of been
+compressed with 
+.I mpibzip2,
+it would decompress fine with 
+.I mpibzip2.  
+If you are unable to decompress a file with 
+.I mpibzip2 
+due to its size, use the regular bzip2 instead.
+.SH EXAMPLES
+Example 1: mpibzip2 myfile.tar
+.PP
+This example will compress the file "myfile.tar" into the compressed file
+"myfile.tar.bz2". It will use the default file block size of 900k and 
+default BWT block size of 900k.
+.PP
+Example 2: mpibzip2 -b15vk myfile.tar
+.PP
+This example will compress the file "myfile.tar" into the compressed
+file "myfile.tar.bz2". It will use a file block size of 1500k and a
+BWT block size of 900k. Verbose mode will be enabled so progress and
+other messages will be output to the display.  The file "myfile.tar"
+will not be deleted after compression is finished.
+.PP
+Example 3: mpibzip2 -5 -v myfile.tar second*.txt
+.PP
+This example will compress the file "myfile.tar" into the compressed file 
+"myfile.tar.bz2". It will use a BWT block size of 500k.  Verbose mode will
+be enabled so progress and other messages will be output to the display.
+mpibzip2 will then use the same options to compress all other files that
+match the wildcard "second*.txt" in that directory.
+.PP
+Example 4: mpibzip2 -d myfile.tar.bz2
+.PP
+This example will decompress the file "myfile.tar.bz2" into the decompressed 
+file "myfile.tar". The switches -b, and -1..-9 are not valid for decompression.
+.SH "SEE ALSO"
+.BR bzip2 (1), 
+.BR mpirun (1)
+.SH AUTHOR
+Jeff Gilchrist
+.PP
+http://compression.ca

@@ -1,0 +1,22 @@
+Authors of mpibzip2
+-------------------
+Jeff Gilchrist (http://gilchrist.ca/jeff/)
+
+- Uses libbzip2 by Julian Seward (http://www.bzip.org/)
+
+
+Contributions
+-------------
+Bryan Stillwell <bryan@bokeoa.com> - code cleanup
+
+Dru Lemley [http://lemley.net/smp.html] - help with large file support
+
+Joergen Ramskov <joergen@ramskov.org> - initial version of man page
+
+Peter Cordes <peter@cordes.ca> - code cleanup
+
+Jindrich Novy <jnovy@redhat.com> - code cleanup and bug fixes
+
+Richard Russon <ntfs@flatcap.org> - help fix decompression bug
+
+Paul Pluzhnikov <paul@parasoft.com> - fixed minor memory leak

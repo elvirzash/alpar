@@ -1,0 +1,141 @@
+July 18, 2007
+
+MPI BZIP2 v0.6 - by: Jeff Gilchrist <mpibzip2@compression.ca>
+Available at:  http://compression.ca/
+
+This is the README for mpibzip2, a parallel MPI implementation of the
+bzip2 block-sorting file compressor, version 0.6.  The output of
+this version should be fully compatible with bzip2 v1.0.2 or newer
+(ie: anything compressed with mpibzip2 can be decompressed with bzip2).
+
+mpibzip2 is distributed under a BSD-style license.  For details,
+see the file COPYING.
+
+
+1. HOW TO BUILD -- UNIX
+
+Type `make'.  This builds the mpibzip2 program and dynamically
+links to the libbzip2 and mpi libraries.
+
+If you do not have libbzip2 installed on your system, you should
+first go to http://www.bzip.org/ and install it.  If you do not
+have MPI installed, go to http://www-unix.mcs.anl.gov/mpi/ or
+install another MPI package.
+
+Debian users need the package "libbz2-dev".  If you want to
+install a pre-built package on Debian, run the following command:
+'apt-get update; apt-get install mpibzip2'
+
+If you would like to build mpibzip2 with a statically linked
+libbzip2 library, download the bzip2 source from the above site,
+compile it, and copy the libbz2.a and bzlib.h files into the
+mpibzip2 source directory.  Then type `make mpibzip2-static'.
+
+Note: This software has been tested on Linux and Solaris (Sparc).
+
+
+3. DISCLAIMER
+
+   I TAKE NO RESPONSIBILITY FOR ANY LOSS OF DATA ARISING FROM THE
+   USE OF THIS PROGRAM, HOWSOEVER CAUSED.
+
+   DO NOT COMPRESS ANY DATA WITH THIS PROGRAM UNLESS YOU ARE
+   PREPARED TO ACCEPT THE POSSIBILITY, HOWEVER SMALL, THAT THE
+   DATA WILL NOT BE RECOVERABLE.
+
+* Portions of this README were copied directly from the bzip2 README
+  written by Julian Seward.
+
+  
+4. mpibzip2 DATA FORMAT
+
+You should be able to compress files larger than 4GB with mpibzip2.
+
+Files that are compressed with mpibzip2 are broken up into pieces and
+each individual piece is compressed.  This is how mpibzip2 runs faster
+on multiple CPUs since the pieces can be compressed simultaneously.
+The final .bz2 file may be slightly larger than if it was compressed
+with the regular bzip2 program due to this file splitting (usually
+less than 0.2% larger).  Files that are compressed with mpibzip2 will
+also gain considerable speedup when decompressed using mpibzip2.
+
+Files that were compressed using bzip2 will not see speedup since
+bzip2 pacakages the data into a single chunk that cannot be split
+between processors.  If you have a large file that was created with
+bzip2 (say 1.5GB for example) you will likely not be able to
+decompress the file with mpibzip2 since mpibzip2 will try to allocate
+1.5GB of memory to decompress it, and that call might fail depending
+on your system resources.  If the same 1.5GB file had of been
+compressed with mpibzip2, it would decompress fine with mpibzip2.  If
+you are unable to decompress a file with mpibzip2 due to its size, use
+the regular bzip2 instead.
+
+A file compressed with bzip2 will be one compressed stream of data
+that looks like this:
+[-----------------------------------------------------]
+
+Data compressed with mpibzip2 is broken into multiple streams and each
+stream is bzip2 compressed looking like this:
+[-----|-----|-----|-----|-----|-----|-----|-----|-----]
+
+If you are writing software with libbzip2 to decompress data created
+with mpibzip2, you must take into account that the data contains multiple
+bzip2 streams so you will encounter end-of-stream markers from libbzip2
+after each stream and must look-ahead to see if there are any more
+streams to process before quitting.  The bzip2 program itself will
+automatically handle this condition.
+
+
+5. USAGE
+
+The mpibzip2 program is a parallel implementation of the bzip2 block-
+sorting file compressor that uses MPI and achieves significant speedup
+on cluster machines.  The output is fully compatible with the regular
+bzip2 data so any files created with mpibzip2 can be uncompressed by bzip2
+and vice-versa.  Since mpibzip2 uses MPI, you will need to launch it using
+mpirun or some similar utility (ie: mpirun -np 4 mpibzip2 myfile.tar).
+
+Usage:  mpibzip2 [-1 .. -9] [-b#cdfktvV] <filename> <filename2> <filenameN>
+
+Switches:
+  -b#      : where # is the file block size in 100k (default 9 = 900k)
+  -c       : output to standard out (stdout)
+  -d       : decompress file
+  -f       : force, overwrite existing output file
+  -k       : keep input file, don't delete
+  -t       : test compressed file integrity
+  -v       : verbose mode
+  -V       : display version info for mpibzip2 then exit
+  -1 .. -9 : set BWT block size to 100k .. 900k (default 900k)
+  
+
+Example:  mpibzip2 myfile.tar
+
+This example will compress the file "myfile.tar" into the compressed
+file "myfile.tar.bz2". It will use the default file block size of 900k
+and default BWT block size of 900k.
+
+
+Example:  mpibzip2 -b15vk myfile.tar
+
+This example will compress the file "myfile.tar" into the compressed
+file "myfile.tar.bz2". It will use a file block size of 1500k and a
+BWT block size of 900k. Verbose mode will be enabled so progress and
+other messages will be output to the display.  The file "myfile.tar"
+will not be deleted after compression is finished.
+ 
+
+Example:  mpibzip2 -5 -v myfile.tar second*.txt
+
+This example will compress the file "myfile.tar" into the compressed
+file "myfile.tar.bz2". It will use a BWT block size of 500k. Verbose
+mode will be enabled so progress and other messages will be output to
+the display.mpibzip2 will then use the same options to compress all
+other files that match the wildcard "second*.txt" in that directory.
+
+
+Example:  mpibzip2 -d myfile.tar.bz2
+
+This example will decompress the file "myfile.tar.bz2" into the
+decompressed file "myfile.tar". The switches -b, and -1..-9 are not
+valid for decompression.
